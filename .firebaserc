@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "anydan--app",
+    "staging": "anydan--app"
+  }
+}
