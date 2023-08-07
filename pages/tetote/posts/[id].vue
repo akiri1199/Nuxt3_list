@@ -7,7 +7,6 @@ type OnayamiAdvise = {
   userName: any
   content: any
   status: any
-  created_at: any
   year: any
   month: any
   date: any
@@ -15,28 +14,61 @@ type OnayamiAdvise = {
   min: any
 }
 const { params } = useRoute();
-
-
 const postsId = params.id as any
-
 const postId = postsId
+const postInfo = ref({}) as any
 
-const postInfo = ref('') as any
 const unsub = onSnapshot(doc(getFirestore(), 'posts', postId), (doc: any) => {
   postInfo.value = doc.data() as any
+
+  const title = `${postInfo.value.content}`
+  useSeoMeta({
+    title: title,
+    description: title,
+    ogImage: 'https://anydan.link',
+  }),
+    useHead({
+      title: title,
+      meta: [
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: title },
+        { name: "description", content: title },
+      ]
+    })
 })
 
 const alert = ref<boolean>(false)
-const count = ref()
-
+const count = ref(0)
+var show_key = ref(0)
 const { data: onayamiAdviseList, refresh } = await useAsyncData(async () => {
   const q = query(collection(getFirestore(), 'posts', postId, 'comments'), orderBy('created_at', 'desc'))
+  const onayamiAd: OnayamiAdvise[] = []
   const querySnapshot = await getDocs(q)
+
+  if (count.value === 0) {
+    const length = querySnapshot.docs.length
+    count.value = length
+  } else {
+    show_key.value = 1;
+    querySnapshot.forEach((doc: any) => {
+
+      onayamiAd.push({
+        id: doc.id,
+        userName: doc.data().userName,
+        content: doc.data().content,
+        status: doc.data().status,
+        year: doc.data().year,
+        month: doc.data().month,
+        date: doc.data().date,
+        hour: doc.data().hour,
+        min: doc.data().min,
+      })
+    })
+    return onayamiAd
+  }
 }, {
   watch: [count]
 })
-
-
 const array = ref(onayamiAdviseList)
 const content = ref('')
 const testForm = ref('') as any
@@ -60,20 +92,8 @@ const { adviseiIncrement } = useAdviseIncrement()
 const incrementAdvise = async (id: any) => {
   adviseiIncrement(postId, id)
 }
-const title = `${postInfo.value.content}`
-useSeoMeta({
-  title: title,
-  description: title,
-  ogImage: 'https://anydan.link',
-}),
-  useHead({
-    title: title,
-    meta: [
-      { property: 'og:title', content: title },
-      { property: 'og:description', content: title },
-      { name: "description", content: title },
-    ]
-  })
+
+
 </script>
 <template>
   <v-container>
@@ -144,7 +164,7 @@ useSeoMeta({
         </v-btn>
       </v-col>
     </v-row>
-    <v-row v-if="!count" justify="center">
+    <v-row v-if="count < 1" justify="center">
       <v-col cols="8" xs="8" sm="8" md="8" lg="8" align="center">
         <v-card class="mt-6 mb-1" color="#F5F5F5">
           <v-card-subtitle class="mt-1 mb-1">コメントはありません</v-card-subtitle>
@@ -175,7 +195,7 @@ useSeoMeta({
         </v-card>
       </v-col>
     </v-row>
-    <v-row justify="center">
+    <v-row v-if="show_key === 1" justify="center">
       <v-col cols="11" xs="12" sm="9" md="9" lg="9" style="margin-bottom:100px; margin-top:10px;">
         <v-divider class="mb-5" />
         <p>
