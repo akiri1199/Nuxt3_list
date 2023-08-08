@@ -47,7 +47,7 @@ export default defineNuxtConfig({
     hostname: 'https://anydan.link'
   },
   routeRules: {
-    '/': { ssr: false },
+    '/': { ssr: true },
     '/tetote/posts/**': { ssr: true },
   },
 
